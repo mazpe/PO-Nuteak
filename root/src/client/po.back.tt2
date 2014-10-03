@@ -1,0 +1,305 @@
+        <script type="text/javascript">
+            var list1 = [
+                {'When':'A','Value':'A1','Text':'A1'},
+                {'When':'A','Value':'A2','Text':'A2'},
+                {'When':'A','Value':'A3','Text':'A3'},
+                {'When':'A','Value':'A4','Text':'A4'},
+                {'When':'B','Value':'B1','Text':'B1'},
+                {'When':'B','Value':'B2','Text':'B2'},
+                {'When':'B','Value':'B3','Text':'B3'},
+                {'When':'B','Value':'B4','Text':'B4'},
+                {'When':'C','Value':'C1','Text':'C1'},
+                {'When':'C','Value':'C2','Text':'C2'},
+                {'When':'D','Value':'D1','Text':'D1'},
+                {'When':'D','Value':'D2','Text':'D2'}
+                ];
+            var list2 = [
+                {'When':'A1','Value':'W','Text':'SubchildA1a'},
+                {'When':'A1','Value':'X','Text':'SubchildA1b'},
+                {'When':'A2','Value':'Y','Text':'SubchildA2a'},
+                {'When':'A2','Value':'Z','Text':'SubchildA2b'},
+                {'When':'B1','Value':'W','Text':'SubchildB1a'},
+                {'When':'B1','Value':'X','Text':'SubchildB1b'},
+                {'When':'B2','Value':'Y','Text':'SubchildB2a'},
+                {'When':'B2','Value':'Z','Text':'SubchildB2b'},
+                {'When':'C1','Value':'W','Text':'SubchildC1a'},
+                {'When':'C1','Value':'X','Text':'SubchildC1b'},
+                {'When':'C2','Value':'Y','Text':'SubchildC2a'},
+                {'When':'C2','Value':'Z','Text':'SubchildC2b'},
+                {'When':'D1','Value':'W','Text':'SubchildD1a'},
+                {'When':'D1','Value':'X','Text':'SubchildD1b'},
+                {'When':'D2','Value':'Y','Text':'SubchildD2a'},
+                {'When':'D2','Value':'Z','Text':'SubchildD2b'}              
+                ];  
+            
+            function commonTemplate(item) {
+                return "<option value='" + item.Value + "'>" + item.Text + "</option>"; 
+            };
+            function commonTemplate2(item) {
+                return "<option value='" + item.Value + "'>***" + item.Text + "***</option>"; 
+            };
+            
+            function commonMatch(selectedValue) {
+                return this.When == selectedValue; 
+            };
+            
+        </script>
+        <style type="text/css">
+            .cascade-loading    
+            {                                                                       
+                background: transparent url("indicator.gif") no-repeat center;                  
+            }
+        </style>
+    <script type="text/javascript">
+        jQuery(document).ready(function()
+        {   
+            jQuery("#simple_ajax_child").cascade("#simple_ajax",{                       
+                ajax: { 
+                    url: 'data.js', 
+                    complete: function(){ 
+                        alert('my list is updated'); 
+                    },
+                    data: { myotherdata: jQuery("#ajax_header").html() }
+                },              
+                template: commonTemplate,
+                match: commonMatch              
+            });
+        });
+    </script>
+
+
+
+<form method="post" action="http://gbrnd.com:3004/client/purchaseorder/save">
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+
+    $('.note').hide();
+    $(".note").css({ color: "#b2adad" });
+
+    //add new lien item in invoices
+    $("a.add_line_item").click(function () { 
+        add_line_item();
+        //autoFill($(".note"), "Description");
+    });
+
+
+});
+
+</script>
+
+<table> <!-- #main -->
+  <tr> <!-- #main -->
+    <td> <!-- #main -->
+
+    <table id="client_info" width="500">
+      <tr>
+        <td>
+        <div id="nuteak_logo">NuTeak Logo</div>
+        <div id="address">
+        3732 SW 30th Ave.<br />
+        Hollywood, FL, 33312
+        </div>
+        <div id="po_number">PO Number:
+        <input type="text" class="" name="po_number" size="15">
+        </div>
+        </td>
+        <td>
+        <div id="nuteak_logo">
+        <input type="text" class="" name="company" size="25" 
+            value="[% client.company %]">
+        </div>
+        <div id="address">
+        <input type="text" class="" name="contact" size="25"
+            value="[% client.contact %]"><br />
+        <input type="text" class="" name="address_1" size="25" 
+            value="[% client.address_1 %]"><br />
+        <input type="text" class="" name="city" size="6" 
+            value="[% client.city %]">,
+        <input type="text" class="" name="state" size="2" 
+            value="[% client.state %]">,
+        <input type="text" class="" name="zip" size="3" 
+            value="[% client.zip_code %]">
+        </div>
+        </td>
+      </tr>
+    </table> <!-- #client_info -->
+
+    </td> <!-- #main -->
+  </tr> <!-- #main -->
+  
+  <tr> <!-- #main -->
+    <td> <!-- #main -->
+    <table id="itemtable">
+    <tbody id="itemtable-tbody">
+    <tr>
+        <td class=""></td>
+        <td class="">Code</td>
+        <td class="">Description</td>
+        <td class="">Caulking</td>
+        <td class="">Quantity</td>
+        <td class="">Unit Price</td>
+        <td class="">Total Price</td>
+    </tr>
+    </tbody>
+    
+    <tbody class="line_item" id="row0">
+    <tr>
+        <td><a href="#" class="trash_link" id="trash_link0"> X </a></td>
+        <td>
+            <select id="simple_ajax">
+            <option value="A">A</option>
+            [% FOREACH item IN items %]
+            <option value="[% item.code %]">
+            [% item.code | html %]
+            </option>
+            [% END %]
+            </select>
+        </td>
+        <td>
+            <select id="simple_ajax_child" name="description0" rel="0">
+            </select>
+        </td>
+        <td>
+        <select id="options0" name="options0" rel="0">
+          <option value=""></option>
+          [% FOREACH item IN items %]
+          <option value="[% item.id %]">
+            [% item.code | html %]
+          </option>
+          [% END %]
+        </select>
+        </td>
+        <td>
+        <input type="text" class="validate[required]" name="quantity0"
+            id="quantity0" size=5" />
+        </td>
+        <td>
+        <input type="text" class="" name="price0" id="price0" 
+            size="7" />
+        </td>
+        <td>
+        <input type="text" class="" name="total_price0" id="total_price0" 
+            size="7" />
+        </td>
+    </tr>
+    <tr class="note">
+        <td colspan="4">
+        <textarea input type="text" class="note" name="note0" 
+            id="note0" rows="3 cols="3" WRAP=nowrap></textarea>
+        </td>
+    </tr>
+    </tbody>
+
+<!-- row -->
+
+    <tbody class="line_item" id="row1">
+    <tr>
+        <td><a href="#" class="trash_link" id="trash_link1"> X </a></td>
+        <td>
+            <select id="code1" name="code1" rel="0">
+            <option value=""></option>
+            [% FOREACH item IN items %]
+            <option value="[% item.code %]">
+            [% item.code | html %]
+            </option>
+            [% END %]
+            </select>
+        </td>
+        <td>
+            <select id="description1" name="description1" rel="0">
+            <option value=""></option>
+            [% FOREACH item IN items %]
+            <option value="[% item.description | html %]">
+            [% item.description | html %]
+            </option>
+            [% END %]
+            </select>
+        </td>
+        <td>
+        <select id="options1" name="options1" rel="0">
+          <option value=""></option>
+          [% FOREACH item IN items %]
+          <option value="[% item.id %]">
+            [% item.code | html %]
+          </option>
+          [% END %]
+        </select>
+        </td>
+        <td>
+        <input type="text" class="validate[required]" name="quantity1"
+            id="quantity1" size=5" />
+        </td>
+        <td>
+        <input type="text" class="" name="price1" id="price1"
+            size="7" />
+        </td>
+        <td>
+        <input type="text" class="" name="total_price1" id="total_price1"
+            size="7" />
+        </td>
+    </tr>
+    <tr class="note">
+        <td colspan="4">
+        <textarea input type="text" class="note" name="note1"
+            id="note1" rows="3 cols="3" WRAP=nowrap></textarea>
+        </td>
+    </tr>
+    </tbody>
+
+    </table>
+    
+    <table>
+    <tr>
+        <td colspan="4">
+        <table class="buttons" align="left">
+        <tr>
+            <td>
+            <a href="#" class="add_line_item" >
+            <img src="/static/images/add.png" alt="" /> Add new row </a> 
+            </td>
+            <td>
+            <a href='#' class="show-note" onclick="javascript: $('.note').show();$('.show-note').hide();">
+            <img src="/static/images/page_white_add.png" title="Show details" alt="" />Show details
+            </a>
+
+            <a href='#' class="note" onclick="javascript: $('.note').hide();$('.show-note').show();">
+            <img src="/static/images/page_white_delete.png" title="Hide details" alt="" />Hide details
+            </a>
+            </td>
+        </tr>
+        </table>
+        </td>
+    </tr>
+    </table>
+
+<table class="buttons" align="center">
+    <tr>
+        <td>
+        <button type="submit" class="invoice_save positive" name="submit" value="Submit">
+
+                <img class="button_img" src="/static/images/tick.png" alt="" /> 
+                Save
+            </button>
+            
+        </td>
+        <td>
+        <input type="hidden" id="max_items" name="max_items" value="5" />
+            <input type="hidden" name="type" value="2" />
+            
+            <a href="#" class="negative">
+                <img src="/static/images/cross.png" alt="" />
+                Cancel
+            </a>
+
+    
+        </td>
+    </tr>
+</table>
+
+    </td> <!-- #main -->
+  </tr> <!-- #main -->
+</table> <!-- #main -->
+
+</form>

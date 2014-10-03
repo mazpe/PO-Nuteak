@@ -1,0 +1,456 @@
+<link rel="stylesheet" type="text/css" href="../../../static/js/ext-3.2.0/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="../../../static/js/ext-3.2.0/examples/grid/Ext.ux.grid.GridSummary.css" />
+<script type="text/javascript" src="../../../static/js/ext-3.2.0/adapter/ext/ext-base.js">
+</script>
+<script type="text/javascript" src="../../../static/js/ext-3.2.0/ext-all.js">
+</script>
+<script type="text/javascript" src="../../../static/js/ext-3.2.0/examples/grid/Ext.ux.grid.GridSummary.js">
+</script>
+<script type="text/javascript">
+/**
+ * @author gbritton
+ */
+Ext.onReady(function()
+{
+    var gridForm = new Ext.form.BasicForm(
+        Ext.get("general-form"),
+        {}
+    );
+
+    // create the Data Store
+    var store = new Ext.data.Store(
+    {
+        proxy: new Ext.data.HttpProxy(
+        {
+            url: ""
+        }),
+        reader: new Ext.data.JsonReader(
+        {
+            root: 'data',
+            //id: 'po_number',
+            totalProperty: 'totalCount'
+        }, [
+        {
+            name: 'code'
+        },
+        {
+            name: 'description'
+        },
+        {
+            name: 'options'
+        },
+        {
+            name: 'quantity',
+            type:'int'
+        },
+        {
+            name: 'price',
+            type:'float'
+        },
+        {
+            name: 'totalprice',
+            type:'float'
+        },
+        {
+            name: 'weight',
+            type:'float'
+        },
+        {
+            name: 'sf',
+            type:'float'
+        },
+        {
+            name: 'units',
+            type:'float'
+        },
+
+
+
+        ]),
+        remoteSort: false
+    });
+
+    store.setDefaultSort('po_number', 'asc');
+
+    var price = 0, quantity = 0, weight = 0, sf = 0, units = 0;
+    //[% FOREACH po_item IN po_items %]
+    quantity = parseInt('[% po_item.quantity %]');
+    price = parseFloat('[% po_item.price %]');
+    weight = parseFloat('[% po_item.weight %]');
+    sf = parseFloat('[% po_item.sf %]');
+    units = parseFloat('[% po_item.units %]');
+
+    store.add(new Ext.data.Record({
+        code:'[% po_item.code %]',
+        description:'[% po_item.description %]',
+        options:'[% po_item.options %]',
+        quantity: quantity,
+        price: price,
+        weight: quantity * weight,
+        sf: quantity * sf,
+        units: quantity * units,
+        totalprice: quantity * price
+    }));
+    //[% END %]
+
+    var cm = new Ext.grid.ColumnModel([
+    {
+        header: "Code",
+        dataIndex: 'code',
+        width: 140,
+        sortable: true
+    },
+    {
+        header: "Description",
+        dataIndex: 'description',
+        width: 275,
+        sortable: true
+    },
+    {
+        header: "Caulking",
+        dataIndex: 'options',
+        width: 80,
+        sortable: true
+    },
+    {
+        header: "Qty",
+        dataIndex: 'quantity',
+        width: 30,
+        summaryType:'sum',
+        sortable: true
+    },
+    {
+        header: "Unit Price",
+        dataIndex: 'price',
+        width: 80,
+        renderer: 'usMoney',
+        sortable: true
+    },
+    {
+        header: "Total Price",
+        dataIndex: 'totalprice',
+        width: 100,
+        renderer: 'usMoney',
+        summaryType:'sum',
+        sortable: true
+    },
+    {
+        header: 'Weight',
+        dataIndex:'weight',
+        width:70,
+        summaryType:'sum',
+        sortable:true
+    },
+    {
+        header: 'SQF',
+        dataIndex:'sf',
+        width:50,
+        summaryType:'sum',
+        sortable:true
+    },
+    {
+        header: 'Units',
+        dataIndex:'units',
+        width:75,
+        summaryType:'sum',
+        sortable:true
+    }
+]);
+
+    var summary = new Ext.ux.grid.GridSummary();
+
+    var status = '[% po_item.status %]';
+    var gridType = (status == 'Submitted'? Ext.grid.EditorGridPanel : Ext.grid.GridPanel);
+
+    var grid = new gridType(
+    {
+        sm: new Ext.grid.RowSelectionModel(
+        {
+            singleSelect: false
+        }),
+        width: 900,
+        //height: 500,
+        autoHeight: true,
+        minHeight: 100,
+        store: store,
+        trackMouseOver: false,
+        disableSelection: true,
+        loadMask: true,
+        plugins: summary,
+        // grid columns
+        cm: cm,
+        // customize view config
+        viewConfig:
+        {
+            forceFit: true,
+            enableRowBody: true,
+            showPreview: false,
+            getRowClass: function(record, rowIndex, p, store)
+            {
+                if (this.showPreview)
+                {
+                    p.body = '<p>' + 'Aditional Information Here' + '</p>';
+                    return 'x-grid3-row-expanded';
+                }
+                return 'x-grid3-row-collapsed';
+            }
+        },
+        // paging bar on the bottom
+/*
+        bbar: [
+        {
+            text: 'Delete Selected Row',
+            handler: deleteSelection
+        },
+        {
+            pressed: false,
+            enableToggle: true,
+            text: 'Show Details',
+            cls: 'x-btn-text-icon',
+            toggleHandler: function(btn, pressed)
+            {
+                var view = grid.getView();
+                view.showPreview = pressed;
+                view.refresh();
+            }
+        }]
+*/
+    });
+
+    // render it
+    grid.render('grid');
+    function deleteSelection()
+    {
+        var records = grid.getSelectionModel().getSelections();
+
+        if (records.length > 0)
+            store.remove([records]);
+        else
+            alert('Not implemented.');
+    }
+
+    function save()
+    {
+        var jsonData = "";
+
+        for (var i = 0; i < store.getCount(); i++)
+        {
+            record = store.getAt(i);
+
+            if (record.data.insert || record.dirty)
+                jsonData += Ext.util.JSON.encode(record.data) + ",";
+        }
+
+        if (jsonData.length > 0)
+        {
+            jsonData = "[" + jsonData.substring(0, jsonData.length - 1) + "]";
+
+            gridForm.submit(
+            {
+                waitMsg: 'Saving changes, please wait...',
+                url: "/client/purchaseorder/update",
+                params:
+                {
+                    data: jsonData,
+                    task: 'save'
+                },
+                success: function(form, action)
+                {
+                    loadDataSource();
+                },
+                failure: function(form, action)
+                {
+                    alert('Error processing the action.');
+                }
+            });
+        }
+        else
+            alert('No changes to submit.');
+    }
+});
+
+  function confirmDelete(anchor)
+  {
+    if (confirm('Are you sure?'))
+    {
+        document.location.href = anchor;
+        return true;
+    }
+    return false;
+  }
+
+
+</script>
+
+
+<table>
+    <!-- #main -->
+    <tr>
+        <!-- #main -->
+        <td>
+            <!-- #main -->
+<form method="post" action="/admin/orders/update">
+            <table id="client_info" width="900" border="0">
+                <tr>
+                    <td>
+                            <div>
+                            <b>Bill To:</b>
+                            </div>
+                            <div>
+                            <b>PO Number: </b><input type="text" id="po-number" name="po_number" size="11" value="[% po.po_number %]">
+                            </div>
+                            <div id="nuteak_logo">
+                                <input type="text" class="" name="company" size="25" value="[% po.company %]">
+                            </div>
+                            <div id="address">
+                                <input type="text" class="" name="contact" size="25" value="[% po.contact %]">
+                                <br/>
+                                <input type="text" class="" name="address_1" size="25" value="[% po.address_1 %]">
+                                <br/>
+                                <input type="text" class="" name="city" size="6" value="[% po.city %]">,<input type="text" class="" name="state" size="2" value="[% po.state %]">,<input type="text" class="" name="zip_code" size="3" value="[% po.zip_code %]">
+                                <br>
+                                Phone: <input type="text" name="telephone" size="16" value="[% po.telephone %]">
+                            </div>
+
+                    </td>
+                    <td>
+                          <div>
+                            <b>Shipping Address:</b>
+                            </div>
+    <br>
+                            <div id="nuteak_logo">
+                                <input type="text" class="" name="ship_company" size="25" value="[% po.ship_company %]">
+                            </div>
+                            <div id="address">
+                                <input type="text" class="" name="ship_contact" size="25" value="[% po.ship_contact %]">
+                                <br/>
+                                <input type="text" class="" name="ship_address_1" size="25" value="[% po.ship_address_1 %]">
+                                <br/>
+                                <input type="text" class="" name="ship_city" size="6" value="[% po.ship_city %]">,<input type="text" class="" name="ship_state" size="2" value="[% po.ship_state %]">,<input type="text" class="" name="ship_zip_code" size="3" value="[% po.ship_zip_code %]">
+                                <br />
+Phone: <input type="text" name="ship_telephone" size="16" value="[% po.ship_telephone %]">
+                            </div>
+
+                    </td>
+                    <td rowspan="2" width="400" valign="top"><b>Notes:</b><br />
+                        <textarea name="notes" cols="30" rows="8">[% po.notes %]</textarea>
+                    </td>
+                </tr>
+                <tr>    
+                    <td>
+                        <input type="hidden" class="" name="id" size="15" value="[% po.id %]">
+                        <input type="submit" name="submit" id="submit" value="Save" />
+<br>
+<br>
+                    </td>
+                    <td align="center">
+                    Status: 
+                    <select name="status">
+                      <option value="Submitted"
+                        [% IF po.status == 'Submitted' %] selected [% END %]>Submitted
+                      <option value="Void"
+                        [% IF po.status == 'Void' %] selected [% END %]>Void
+                      <option value="Shipped"
+                        [% IF po.status == 'Shipped' %] selected [% END %]>Shipped
+                      <option value="Completed"
+                        [% IF po.status == 'Completed' %] selected [% END %]>Completed
+                      <option value="In Progress"
+                        [% IF po.status == 'In Progress' %] selected [% END %]>In Progress
+                      <option value="Backorder"
+                        [% IF po.status == 'Backorder' %] selected [% END %]>Backorder
+                    </select>
+                    <br /><br />
+                    Submitted: [% po.created.date %]<br>
+                    Last Update: [% po.updated.date %]<br>
+                    <br>
+                    </td>
+                </tr>
+
+            </table><!-- #client_info -->
+</form>
+            <table width="500">
+                <tr>
+                    <td>
+<form method="post" action="/admin/orders/po_delete/[% po.id %]">
+                        <input type="submit" name="delete" id="delete" value="Delete"
+                        onclick="return confirmDelete('http://po.nuteak.com/admin/orders/po_delete/[% po.id %]');"
+                        />
+</form>
+                    </td>
+                </tr>
+            </table>
+        </td><!-- #main -->
+    </tr><!-- #main -->
+    <tr>
+        <!-- #main -->
+        <td>
+            <!-- #main -->
+			<div id="grid"></div>
+            <!--table id="itemtable">
+                <tbody id="itemtable-tbody">
+                    <tr>
+                        <td class="">
+                        </td>
+                        <td class="" width="75">
+                            Code
+                        </td>
+                        <td class="" width="220">
+                            Description
+                        </td>
+                        <td class="" width="70">
+                            Caulking
+                        </td>
+                        <td class="" width="70">
+                            Quantity
+                        </td>
+                        <td class="" width="70">
+                            Unit Price
+                        </td>
+                        <td class="" width="70">
+                            Total Price
+                        </td>
+                    </tr>
+                </tbody>
+                [% FOREACH po_item IN po_items %]
+                <tbody class="line_item" id="row0">
+                    <tr>
+                        <td>
+                            <a href="#" class="trash_link" id="trash_link0">X </a>
+                        </td>
+                        <td>
+                            [% po_item.code %]
+                        </td>
+                        <td>
+                            [% po_item.description %]
+                        </td>
+                        <td>
+                            [% po_item.options %]
+                        </td>
+                        <td>
+                            [% po_item.quantity %] 
+                        </td>
+                        <td>
+                            [% po_item.price %] 
+                        </td>
+                        <td>
+                            [% po_item.price * po_item.quantity %] 
+                        </td>
+                    </tr>
+                </tbody>
+                [% END %]
+            </table-->
+            <!--table class="buttons" align="center">
+                <tr>
+                    <td>
+                        <button type="submit" class="invoice_save positive" name="submit" value="Submit">
+                            <img class="button_img" src="./images/common/tick.png" alt="" />Save
+                        </button>
+                    </td>
+                    <td>
+                        <input type="hidden" id="max_items" name="max_items" value="5" /><input type="hidden" name="type" value="2" /><a href="#" class="negative"><img src="./images/common/cross.png" alt="" />Cancel</a>
+                    </td>
+                </tr>
+            </table-->
+        </td><!-- #main -->
+    </tr><!-- #main -->
+</table><!-- #main -->

@@ -1,0 +1,186 @@
+<link rel="stylesheet" type="text/css" href="../../static/js/ext-3.2.0/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="../../static/js/ext-3.2.0/examples/grid/Ext.ux.grid.GridSummary.css" />
+<script type="text/javascript" src="../../static/js/ext-3.2.0/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="../../static/js/ext-3.2.0/ext-all.js"></script>
+<script type="text/javascript" src="../../static/js/ext-3.2.0/examples/grid/Ext.ux.grid.GridSummary.js"></script>
+
+<script type="text/javascript">
+/**
+ * @author gbritton
+ */
+Ext.onReady(function()
+{
+    // create the Data Store
+    var store = new Ext.data.Store(
+    {
+        proxy: new Ext.data.HttpProxy(
+        {
+            url: ""
+        }),
+        reader: new Ext.data.JsonReader(
+        {
+            root: 'data',
+            id: 'po_number',
+            totalProperty: 'totalCount'
+        }, [
+        {
+            name: 'po_number'
+        }, 
+        {
+            name: 'company'
+        },
+        {
+            name: 'created',
+			type:'date'
+        }, 
+		{
+            name: 'updated',
+			type:'date'
+        },
+        {
+            name: 'status'
+        }]),
+        remoteSort: false
+    });
+    
+    store.setDefaultSort('created', 'desc');
+    
+	//[% FOREACH order IN orders %]
+	store.add(new Ext.data.Record({
+		po_id:'[% order.id %]',
+        po_number:'[% order.po_number %]',
+		company:'[% order.company %]',
+		created:Date.parseDate('[% order.created %]', 'Y-m-d\\TH:i:s'),
+		updated:Date.parseDate('[% order.updated %]', 'Y-m-d\\TH:i:s'),
+		status:'[% order.status %]'
+	}));
+	//[% END %]
+	
+    var cm = new Ext.grid.ColumnModel([
+	{
+		header:'',
+		dataIndex:'po_id',
+        width: 50,
+		renderer:function(v)
+		{
+			return '<span><a href="/admin/orders/po/' + v + '" class="trash_link" id="trash_link1">View</a></span>';
+		}
+	},
+    {
+        header: "PO",
+        dataIndex: 'po_number',
+        width: 35,        
+        sortable: true
+    }, 
+    {
+        header: "Company",
+        dataIndex: 'company',
+        width: 200,
+        sortable: true
+    },
+    {
+        header: "Date Submited",
+        dataIndex: 'created',
+        renderer: Ext.util.Format.dateRenderer('m/d/Y - h:i A'),
+        width: 100,
+        sortable: true
+    }, 
+    {
+        header: "Last Updated",
+        dataIndex: 'updated',
+        renderer: Ext.util.Format.dateRenderer('m/d/Y - h:i A'),
+        width: 100,
+        sortable: true
+    },
+    {
+        header: "Status",
+        dataIndex: 'status',
+        width: 70,
+        sortable: true
+    }]);
+    
+    var summary = new Ext.ux.grid.GridSummary();
+    
+    var grid = new Ext.grid.GridPanel(
+    {
+        sm: new Ext.grid.RowSelectionModel(
+        {
+            singleSelect: false
+        }),
+        width: 900,
+        //height: 500,
+        autoHeight: true,
+        minHeight: 100,
+        store: store,
+        trackMouseOver: false,
+        disableSelection: true,
+        loadMask: true,
+        plugins: summary,
+        // grid columns
+        cm: cm,
+        // customize view config
+        viewConfig: 
+        {
+            forceFit: true,
+            enableRowBody: true,
+            showPreview: false,
+            getRowClass: function(record, rowIndex, p, store)
+            {
+                if (this.showPreview) 
+                {
+                    p.body = '<p>' + 'Aditional Information Here' + '</p>';
+                    return 'x-grid3-row-expanded';
+                }
+                return 'x-grid3-row-collapsed';
+            }
+        },
+        // paging bar on the bottom
+
+/*
+        bbar: [
+        {
+            pressed: false,
+            enableToggle: true,
+            text: 'Show Details',
+            cls: 'x-btn-text-icon',
+            toggleHandler: function(btn, pressed)
+            {
+                var view = grid.getView();
+                view.showPreview = pressed;
+                view.refresh();
+            }
+        }]
+*/
+    });
+    
+    // render it
+    grid.render('grid');
+});
+</script>
+<div id="grid"></div>
+<!--table id="itemtable">
+<tbody id="itemtable-tbody">
+<tr>
+    <td class="" width="20"></td>
+    <td class="" width="50">PO</td>
+    <td class="" width="100">Date</td>
+    <td class="" width="100">Status</td>     
+</tr>
+</tbody>
+
+[% FOREACH order IN orders %]
+<tbody class="line_item" id="row1">
+<tr>
+    <td>
+        <a href="/admin/orders/po/[% order.po_number %]" class="trash_link" id="trash_link1">view</a>
+    </td>
+    <td>[% order.po_number %]</td>
+    <td>[% order.timestamp %]</td>
+    <td>[% order.status %]</td>
+</tr>
+</tbody>
+[% END %]
+
+</table-->
+
+

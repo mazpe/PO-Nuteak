@@ -1,0 +1,58 @@
+<link rel="stylesheet" href="[% c.uri_for('/static/css/flexigrid.css') %]" />
+<script language="javascript" src="[% c.uri_for('/static/js/flexigrid.js') %]">
+</script>
+
+<table id="items_grid" style="display:none"></table>
+
+<style>
+.flexigrid div.fbutton .add
+{   
+background: url([% c.uri_for('/static/images/flexigrid/add.png') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .edit
+{   
+background: url([% c.uri_for('/static/images/pen-16.gif') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .delete
+{   
+background: url([% c.uri_for('/static/images/flexigrid/close.png') %]) no-repeat center left;
+}
+</style>
+
+<script type="text/javascript">
+function add_item(button, grid) {}
+function edit_item(button, grid) {}
+function delete_item(button, grid) {}
+
+$("#items_grid").flexigrid({
+    url: '/api/items',
+    dataType: 'json',
+    colModel : [
+        {display: 'id', name : 'id', width : 0, sortable : false, hide: true},
+        {display: 'Family', name : 'family', width : 60, sortable : true, align: 'left'},
+        {display: 'Code', name : 'code', width : 100, sortable : true, align: 'left'},
+        {display: 'Description', name : 'description', width : 290, sortable : true, align: 'left'},
+        {display: 'Price', name : 'price', width : 50, sortable : true, align: 'left'},
+    ],
+    searchitems : [
+        {display: 'Code', name: 'code', isdefault: true},
+        {display: 'Family', name: 'family' },
+    ],
+    buttons : [
+        {name: 'Add', bclass: 'add', onpress : add_item},
+        {name: 'Edit', bclass: 'edit', onpress : edit_item},
+        {name: 'Delete', bclass: 'delete', onpress : delete_item},
+        {separator: true}
+    ],
+    sortname: "code",
+    sortorder: "asc",
+    usepager: true,
+    title: 'Items',
+    useRp: true,
+    rp: 10,
+    width: 550,
+    height: 245
+});
+</script>
+
+

@@ -1,0 +1,94 @@
+---
+# indicator is the field that is used to test for form submission
+indicator: submit
+# Start listing the form elements
+elements:
+    # The first element will be a text field for the title
+    - type: Text
+      name: company
+      label: Company
+      # This is an optional 'mouse over' title pop-up
+      attributes:
+        title: Enter a book title here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: contact
+      label: Contact
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: address_1 
+      label: Address 1 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: city 
+      label: City
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: state 
+      label: State 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: zip_code
+      label: Zip Code 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: telephone 
+      label: Telephone 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: fax 
+      label: Fax 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric rating
+    - type: Text
+      name: email 
+      label: Email 
+      attributes:
+        title: Enter a rating between 1 and 5 here
+
+    # Another text field for the numeric username 
+    - type: Text
+      name: username 
+      label: Username 
+      attributes:
+        title: Enter a username 
+
+    # This works data wise, but not what i wanted.
+    - type: Block
+      nested_name: user 
+      elements:
+        - type: Textarea
+          name: username 
+
+    # Another text field for the password 
+    - type: Password 
+      name: password 
+      label: Password 
+      attributes:
+        title: Enter a password 
+
+    # The submit button
+    - type: Submit
+      name: submit
+      value: Submit

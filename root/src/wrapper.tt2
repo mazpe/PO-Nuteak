@@ -1,0 +1,84 @@
+[% IF no_wrapper %]
+
+[% content %]
+
+[% ELSE %]
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>[% template.title or "Nuteak - Purchase Order System" %]</title>
+<link rel="stylesheet" href="[% c.uri_for('/static/css/main.css') %]" />
+<link rel="stylesheet" type="text/css" href="[% c.uri_for('/', 'static', 'css', 'jquery-ui', 'tab-screen.css') %]" media="all" />
+
+</head>
+
+<body>
+
+<div id="main">
+    <div id="top">
+        <div id="menu">
+
+[% IF c.user.id == 1 %]
+
+        <a href="[% c.uri_for('/admin') %]">Home</a> \
+        <a href="[% c.uri_for('/admin/clients') %]" title="Manage Clients">
+        Clients
+        </a> \
+        <a href="[% c.uri_for('/admin/items') %]" title="Manage Items">
+        Items
+        </a> \
+        <a href="[% c.uri_for('/admin/orders') %]" title="Manage Orders">
+        Orders
+        </a> \
+        <a href="[% c.uri_for('/logout') %]" title="Logout">
+        Logout
+        </a>
+
+[% ELSIF c.user.id > 1 %]
+
+        <a href="[% c.uri_for('/client') %]">Home</a> \
+        <a href="[% c.uri_for('/client/account') %]" title="My Account">
+        Account
+        </a> \ 
+        <a href="[% c.uri_for('/client/purchaseorder') %]" title="Create Purchase Order">
+        Purchase Order
+        </a> \
+        <a href="[% c.uri_for('/client/orders') %]" title="Orders Status">
+        Orders
+        </a> \
+        <a href="[% c.uri_for('/logout') %]" title="Logout">
+        Logout
+        </a>
+
+[% ELSE %]
+
+.
+
+[% END %]
+
+
+
+        </div>
+        <div id="header">
+            <b> [% c.user.username %] - http://po.nuteak.com </b>
+        </div>
+        <div style="clear:both"></div>
+
+
+    </div><!-- menu -->
+    
+    <div id="content">
+    [%# Status and error messages %]
+    <span class="message">[% status_msg %]</span>
+    <span class="error">[% error_msg %]</span>
+    [%# This is where TT will stick all of your template's contents. -%]
+    [% content %]
+    </div><!-- content -->
+</div><!-- main -->
+
+</body>
+</html>
+
+[% END %]

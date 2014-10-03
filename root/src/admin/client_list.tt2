@@ -1,0 +1,58 @@
+
+<div id="client_form" style="display:none"></div>
+
+<table id="clients_grid" style="display:none"></table>
+
+<style>
+.flexigrid div.fbutton .add
+{   
+background: url([% c.uri_for('/static/images/flexigrid/add.png') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .edit
+{   
+background: url([% c.uri_for('/static/images/pen-16.gif') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .delete
+{   
+background: url([% c.uri_for('/static/images/flexigrid/close.png') %]) no-repeat center left;
+}
+</style>
+
+<script type="text/javascript">
+function add_client(button, grid) {}
+function edit_client(button, grid) {}
+function delete_client(button, grid) {}
+ 
+
+
+$("#clients_grid").flexigrid({
+    url: '/api/clients',
+    dataType: 'json',
+    colModel : [
+        {display: 'id', name : 'id', width : 0, sortable : false, hide: true},
+        {display: 'Company', name : 'company', width : 250, sortable : true, align: 'left'},
+        {display: 'Contact', name : 'contact', width : 150, sortable : true, align: 'left'},
+        {display: 'Telephone', name : 'telephone', width : 100, sortable : true, align: 'left'}
+    ],
+    searchitems : [
+        {display: 'Company', name: 'company', isdefault: true},
+        {display: 'Telephone', name: 'telephone' }
+    ],
+    buttons : [
+        {name: 'Add', bclass: 'add', onpress : add_client},
+        {name: 'Edit', bclass: 'edit', onpress : edit_client},
+        {name: 'Delete', bclass: 'delete', onpress : delete_client},
+        {separator: true}
+    ],
+    sortname: "company",
+    sortorder: "asc",
+    usepager: true,
+    title: 'Clients',
+    useRp: true,
+    rp: 10,
+    width: 550,
+    height: 245
+});
+</script>
+
+

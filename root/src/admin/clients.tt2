@@ -1,0 +1,490 @@
+<link rel="stylesheet" type="text/css"
+	href="../../../static/js/ext-3.2.0/resources/css/ext-all.css" />
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/adapter/ext/ext-base.js">
+</script>
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/ext-all.js">
+</script>
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/overrides.js">
+</script>
+
+<script type="text/javascript">	
+/**
+ * @author gbritton
+ */
+Ext.onReady(function()
+{
+	var company = null, contact = null, address_1 = null, city = null, state = null, zipCode = null, telephone = null, fax = null, email = null, username = null, password = null;
+	var form, win = null, adding = null;
+		
+	var gridForm = new Ext.form.BasicForm(
+		Ext.get("general-form"),
+		{}
+	);
+	
+    // create the Data Store
+    var store = new Ext.data.Store(
+    {
+        proxy: new Ext.data.HttpProxy(
+        {
+        	url: '/api/clients',
+        	method:'post',
+		headers:{ 'Content-Type': 'application/json;charset=utf-8,application/x-www-form-urlencoded' }
+            
+        }),
+        reader: new Ext.data.JsonReader(
+        {
+            root: 'data',
+            id: 'id',
+            totalProperty: 'totalCount'
+        }, 
+        [{
+            name: 'id'
+        },
+        {
+            name: 'company'
+        }, 
+        {
+            name: 'contact'
+        }, 
+	{
+		name:'telephone'
+	},
+        {
+            name: 'address_1'
+        },
+        {
+            name: 'city'
+        }, 
+        {
+            name: 'state'
+        }, 
+        {
+            name: 'zip_code'
+        },
+	{
+		name:'telephone'
+	},
+	{
+		name: 'fax'
+	},
+	{
+		name:'email'
+	},
+	{
+		name:'username'
+	},
+	{
+		name:'password'
+	}]),
+        remoteSort: true
+    });
+    
+    store.setDefaultSort('contact', 'asc');
+    store.on('beforeload', assignBaseParams);
+
+    var paging = new Ext.PagingToolbar(
+ 		{
+ 		    store: store,
+ 		    displayInfo: true,
+ 		    pageSize: 50
+ 		});
+    		    
+    var cm = new Ext.grid.ColumnModel([
+    {
+        header: "Id",
+        dataIndex: 'id',
+        width: 100,
+        hidden:true,
+        sortable: true
+    },
+    {
+        header: "Company",
+        dataIndex: 'company',
+        width: 200,      
+        sortable: true
+    },
+    {
+        header: "Contact",
+        dataIndex: 'contact',
+        width: 150,
+        sortable: true
+    }, 
+    {
+        header: "Telephone",
+        dataIndex: 'telephone',
+        width: 100,
+        sortable: true
+    },
+    {
+        header: "Email",
+        dataIndex: 'email',
+        width: 200,
+        sortable: true
+    }
+    ]);
+    
+    var grid = new Ext.grid.GridPanel(
+    {
+        renderTo:'main-panel',
+        sm: new Ext.grid.RowSelectionModel(
+        {
+            singleSelect: false
+        }),        
+        width: 900,
+		autoHeight: true,
+        minHeight: 100,
+        store: store,
+        trackMouseOver: false,        
+        loadMask: true,
+        cm: cm,
+        // customize view config
+        tbar:[
+        {
+            text:'Add',
+            tooltip: 'Add new record',
+            icon: "../images/application/add.png",
+            cls: 'x-btn-text-icon',
+            handler:add
+        },'-',
+        {
+            text:'Edit',
+            tooltip: 'Edit selected record',
+            icon: "../images/application/edit.png",
+            cls: 'x-btn-text-icon',
+            handler:edit
+        },'-',
+	{
+            text:'Save',
+            tooltip: 'Save changes',
+            icon: "../images/application/save.png",
+            cls: 'x-btn-text-icon',
+            handler:save
+        },'-',
+        {
+            text:'Delete',
+            tooltip: 'Delete selected records',
+            icon: "../images/application/delete.png",
+            cls: 'x-btn-text-icon',
+            handler:deleteSelection
+        },'-',
+        {
+            text: 'Refresh',
+            tooltip: 'Reload data',
+            icon: "../images/application/refresh.png",
+            cls: 'x-btn-text-icon',
+            handler: loadDataSource
+        }],        
+        bbar: paging
+    });
+
+    loadDataSource();
+    
+    function assignBaseParams()
+    {
+        store.baseParams.limit = paging.pageSize;
+	store.baseParams.qtype = 'company';
+	store.baseParams.query = null;
+
+        //store.baseParams.search = (search.getValue() != undefined ? search.getValue() : '');
+    }
+
+    function loadDataSource()
+    {
+	var start = paging.cursor/paging.pageSize; //Math.ceil((paging.cursor + paging.pageSize) / paging.pageSize);
+
+        store.load(
+        {
+            params: 
+            {
+                start: start //paging.cursor
+            }
+        });
+    }
+
+    
+    // render it
+    
+	function add()
+    {
+        showWindow(null);
+    }
+
+    function edit()
+    {
+        var record = getSelectedRecord();
+        
+        if(record != null) 
+			showWindow(record);
+        else
+			alert('Please select a row.');
+    }
+    
+    function deleteSelection()
+    {
+        /*var records = grid.getSelectionModel().getSelections();
+        
+        if (records.length > 0) 
+            store.remove([records]);
+        else 
+            alert('Not implemented.');
+	*/
+	Ext.MessageBox.confirm('Confirm', 'Do you want to continue?', function(value)
+							{
+								var rows = grid.getSelectionModel().getSelections();
+								
+								if(rows.length > 0)
+								{
+									if(value == 'yes')
+									{									
+										var jsonData = '';
+										
+										for(var i = 0; i < rows.length; i++)
+											jsonData += '{"id":"' + rows[i].data.id + '"}' + (rows.length == i + 1 ? "" : "," );
+		
+										jsonData = "[" + jsonData + "]";
+										 
+										gridForm.submit(
+											{
+												waitMsg: 'Deleting rows, please wait...',
+												url:"/admin/clients/delete",										
+												params:{data:jsonData},
+												success:function(form, action) 
+												{
+													loadDataSource();
+												},
+												failure: function(form, action) 
+												{
+													  var result = eval("json = " + action.response.responseText);//(action.response.responseText);
+
+                        if(result.json.success == 1)
+                                loadDataSource();
+                        else
+                        alert('There were some errors.');
+
+												}
+											}
+										);												
+									}
+								}
+								else
+									alert('Please select the rows before.');	
+							});
+    }
+    
+    function save()
+    {
+        var jsonData = "";
+        
+        for (var i = 0; i < store.getCount(); i++) 
+        {
+            record = store.getAt(i);
+            
+            if (record.data.insert || record.dirty) 
+                jsonData += Ext.util.JSON.encode(record.data) + ",";
+        }
+        
+        if (jsonData.length > 0) 
+        {
+            jsonData = "[" + jsonData.substring(0, jsonData.length - 1) + "]";
+            
+            gridForm.submit(
+            {
+                waitMsg: 'Submitting Client, please wait...',
+                url: "/admin/clients/create_or_update",
+                params: 
+                {
+                    data: jsonData
+                },
+                success: function(form, action)
+                {
+                    loadDataSource();
+
+                },
+                failure: function(form, action)
+                {
+ 			var result = eval("json = " + action.response.responseText);//(action.response.responseText);
+
+                        if(result.json.success == 1)
+                                loadDataSource();
+                        else
+                        alert('There were some errors.');
+
+                }
+            });
+        }
+        else 
+            alert('No changes to submit.');
+    }
+
+    function getSelectedRecord()
+    {
+		return grid.getSelectionModel().getSelected();
+    }
+    
+    function saveAndClose()
+    {
+		var record = getSelectedRecord();
+
+		if(adding == false)
+		{
+			if(record != null)
+			{
+				record.set('company', company.getValue());
+				record.set('contact', contact.getValue());
+				record.set('address_1', address_1.getValue());
+				record.set('city', city.getValue());
+				record.set('state', state.getValue());
+				record.set('zip_code', zipCode.getValue());
+				record.set('telephone', telephone.getValue());
+				record.set('fax', fax.getValue());			
+				record.set('email', email.getValue());
+				record.set('username', username.getValue());
+				record.set('password', password.getValue());
+			}	
+    	}
+		else
+		{
+			store.add(new Ext.data.Record(
+	        {
+				insert:true,
+	            	id: 0,
+			company: company.getValue(),
+	            	contact: contact.getValue(),
+	            	address_1: address_1.getValue(),
+	            	city: city.getValue(),
+	            	state: state.getValue(),
+		        zip_code: zipCode.getValue(),	            
+	            	telephone: telephone.getValue(),
+	            	fax: fax.getValue(),
+			email: email.getValue(),
+			username: username.getValue(),
+			password: password.getValue()
+	        	}));
+		}
+		
+		save();
+		win.hide();
+    }
+    
+    function showWindow(record)
+    {
+        if(win == null)
+        {           
+	    	company = new Ext.form.TextField({
+	    		fieldLabel:'Company'
+	    	});
+	
+	    	contact = new Ext.form.TextField({
+	    		fieldLabel:'Contact'
+	    	});
+	
+	    	address_1 = new Ext.form.TextField({
+	    		fieldLabel:'Address 1'
+	    	});
+	
+	    	city = new Ext.form.TextField({
+	    		fieldLabel:'City'
+	    	});
+	
+	    	state = new Ext.form.TextField({
+	    		fieldLabel:'State'
+	    	});
+	
+	    	zipCode = new Ext.form.TextField({
+	    		fieldLabel:'Zip Code'
+	    	});
+	
+	    	telephone = new Ext.form.TextField({
+	    		fieldLabel:'Telephone'
+	    	});	
+	
+	    	fax = new Ext.form.TextField({
+	    		fieldLabel:'Fax'
+	    	});
+	    	
+		email = new Ext.form.TextField({
+			fieldLabel:'Email'
+		});
+
+		username = new Ext.form.TextField({
+			fieldLabel: 'Username'
+		});
+
+		password = new Ext.form.TextField({
+			fieldLabel: 'Password'
+		});
+
+	    	form = new Ext.FormPanel({
+	    		layout:'form',
+	    		bodyStyle:'padding:5px 5px 0',
+	    		items:[company, contact, address_1, city, state, zipCode, telephone, fax, email, username, password]
+	    	});
+
+	    	win = new Ext.Window({
+	    		title: 'Add/Edit',
+	    		layout:'fit',
+                width:570,
+                height:400,
+                closeAction:'hide',
+                plain: true,
+		    	items:form,
+		    	buttons: [
+		  	            {
+		  	                text: 'Save',
+		  	                handler: function()
+		  	                {
+		  	                	if(form.getForm().isValid())
+			  	                	saveAndClose();
+		  	                	else
+									alert('Some fields have invalid values.');
+		  	                }
+		  	            }, 
+		  	            {
+		  	                text: 'Close',
+		  	                handler: function()
+		  	                {
+		  						win.hide();
+		  		            }
+		  	            }]
+		   	});
+        }
+
+        if((adding = (record == null)))
+        {
+        	company.setValue(null);
+        	contact.setValue(null);
+        	address_1.setValue(null);
+        	city.setValue(null);
+        	state.setValue(null);
+        	zipCode.setValue(null);
+        	telephone.setValue(null);
+        	fax.setValue(null);        	
+		email.setValue(null);
+		username.setValue(null);
+		password.setValue(null);
+        }
+        else
+        {
+        	company.setValue(record.data.company);
+        	contact.setValue(record.data.contact);
+        	address_1.setValue(record.data.address_1);
+        	city.setValue(record.data.city);
+        	state.setValue(record.data.state);
+        	zipCode.setValue(record.data.zip_code);
+        	telephone.setValue(record.data.telephone);
+        	fax.setValue(record.data.fax);
+		email.setValue(record.data.email);
+		username.setValue(record.data.username);
+		password.setValue(record.data.password);
+        }
+            	
+        win.show(document.body);
+    }
+});
+</script>
+
+<form id="general-form"></form>
+<div id="main-panel"></div>

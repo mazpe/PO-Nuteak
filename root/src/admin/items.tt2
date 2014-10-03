@@ -1,0 +1,502 @@
+
+<link rel="stylesheet" type="text/css"
+	href="../../../static/js/ext-3.2.0/resources/css/ext-all.css" />
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/adapter/ext/ext-base.js">
+</script>
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/ext-all.js">
+</script>
+<script type="text/javascript"
+	src="../../../static/js/ext-3.2.0/overrides.js">
+</script>
+
+<script type="text/javascript">	
+/**
+ * @author gbritton
+ */
+Ext.onReady(function()
+{
+	var family = null, code = null, description = null, options = null, style = null, sf = null, price = null, weight = null, units = null;
+	var form, win = null, adding = null;
+		
+	var gridForm = new Ext.form.BasicForm(
+		Ext.get("general-form"),
+		{}
+	);
+	
+    // create the Data Store
+    var store = new Ext.data.Store(
+    {
+        proxy: new Ext.data.HttpProxy(
+        {
+        	url: '/api/items',
+        	method:'post',            
+        	headers:
+            {
+            'Content-Type': 'application/json;charset=utf-8,application/x-www-form-urlencoded'
+            }
+        }),
+        reader: new Ext.data.JsonReader(
+        {
+            root: 'data',
+            id: 'id',
+            totalProperty: 'totalCount'
+        }, 
+        [{
+            name: 'id'
+        },
+        {
+            name: 'family'
+        }, 
+        {
+            name: 'code'
+        }, 
+		{
+			name:'description'
+		},
+        {
+            name: 'options'
+        },
+        {
+            name: 'style'
+        }, 
+        {
+            name: 'sf'
+        }, 
+        {
+            name: 'price',
+            type: 'float'
+        },
+	    {
+		    name:'weight'
+	    },
+        {
+            name:'units'
+        }
+        ]),
+        remoteSort: true
+    });
+    
+    store.setDefaultSort('family', 'asc');
+	store.on('beforeload', assignBaseParams);
+ 
+    var paging = new Ext.PagingToolbar(
+ 		{
+ 		    store: store,
+ 		    displayInfo: true,
+ 		    pageSize: 50
+ 		});
+    		    
+    var cm = new Ext.grid.ColumnModel([
+    {
+        header: "Id",
+        dataIndex: 'id',
+        width: 100,
+        hidden:true,
+        sortable: true
+    },
+    {
+        header: "Family",
+        dataIndex: 'family',
+        width: 80,      
+        sortable: true
+    },
+    {
+        header: "Code",
+        dataIndex: 'code',
+        width: 140,
+        sortable: true
+    }, 
+    {
+        header: "Description",
+        dataIndex: 'description',
+        width: 300,
+        sortable: true
+    }, 
+    {
+        header: "Option",
+        dataIndex: 'options',
+        width: 80,
+        sortable: true
+    }, 
+    {
+        header: "Style",
+        dataIndex: 'style',
+        width: 60,
+        sortable: true
+    },
+    {
+        header: "SQF",
+        dataIndex: 'sf',
+        width: 50,
+        sortable: true
+    },
+    {
+        header: "Price",
+        dataIndex: 'price',
+        width: 60,
+        align: 'right',        
+        renderer: 'usMoney',
+        sortable: true
+    },
+	{
+        header: "Weight",
+        dataIndex: 'weight',
+        width: 70,
+        align: 'right',
+        sortable: true
+    },
+    {
+        header: "Units",
+        dataIndex: 'units',
+        width: 60,
+        align: 'right',
+        sortable: true
+    }]);
+    
+    var grid = new Ext.grid.GridPanel(
+    {
+        renderTo:'main-panel',
+        sm: new Ext.grid.RowSelectionModel(
+        {
+            singleSelect: false
+        }),        
+        width: 900,
+		autoHeight: true,
+        minHeight: 100,
+        store: store,
+        trackMouseOver: false,        
+        loadMask: true,
+        cm: cm,
+        // customize view config
+        tbar:[
+        {
+            text:'Add',
+            tooltip: 'Add new record',
+            icon: "../images/application/add.png",
+            cls: 'x-btn-text-icon',
+            handler:add
+        },'-',
+        {
+            text:'Edit',
+            tooltip: 'Edit selected record',
+            icon: "../images/application/edit.png",
+            cls: 'x-btn-text-icon',
+            handler:edit
+        },'-',
+	 {
+            text:'Save',
+            tooltip: 'Save changes',
+            icon: "../images/application/edit.png",
+            cls: 'x-btn-text-icon',
+            handler:save
+        },'-',
+        {
+            text:'Delete',
+            tooltip: 'Delete selected records',
+            icon: "../images/application/delete.png",
+            cls: 'x-btn-text-icon',
+            handler:deleteSelection
+        },'-',
+        {
+            text: 'Refresh',
+            tooltip: 'Reload data',
+            icon: "../images/application/refresh.png",
+            cls: 'x-btn-text-icon',
+            handler: loadDataSource
+        }],        
+        bbar: paging
+    });
+
+    loadDataSource();
+    
+    function assignBaseParams()
+    { 
+        store.baseParams.limit = paging.pageSize;
+        store.baseParams.qtype = 'description';
+        store.baseParams.query = null;
+	
+        //store.baseParams.search = (search.getValue() != undefined ? search.getValue() : '');
+    }
+
+    function loadDataSource()
+    {
+	var start = paging.cursor/paging.pageSize; Math.ceil((paging.cursor + paging.pageSize) / paging.pageSize);
+
+        store.load(
+        {
+            params: 
+            {
+                start: start//paging.cursor
+            }
+        });
+    }
+
+    
+    // render it
+    
+	function add()
+    {
+        showWindow(null);
+    }
+
+    function edit()
+    {
+        var record = getSelectedRecord();
+        
+        if(record != null) 
+			showWindow(record);
+        else
+			alert('Please select a row.');
+    }
+    
+    function deleteSelection()
+    {
+        /*var records = grid.getSelectionModel().getSelections();
+        
+        if (records.length > 0) 
+            store.remove([records]);
+        else 
+            alert('Not implemented.');*/
+	
+	Ext.MessageBox.confirm('Confirm', 'Do you want to continue?', function(value)
+							{
+								var rows = grid.getSelectionModel().getSelections();
+								
+								if(rows.length > 0)
+								{
+									if(value == 'yes')
+									{									
+										var jsonData = '';
+										
+										for(var i = 0; i < rows.length; i++)
+											jsonData += '{"id":"' + rows[i].data.id + '"}' + (rows.length == i + 1 ? "" : "," );
+		
+										jsonData = "[" + jsonData + "]";
+										 
+										gridForm.submit(
+											{
+												waitMsg: 'Deleting rows, please wait...',
+												url:"/admin/items/delete",
+												params:{data:jsonData},
+												success:function(form, action) 
+												{
+													loadDataSource();
+												},
+												failure: function(form, action) 
+												{
+													 var result = eval("json = " + action.response.responseText);//(action.response.responseText);
+
+                        if(result.json.success == 1)
+                                loadDataSource();
+                        else
+                        alert('There were some errors.');
+												}
+											}
+										);												
+									}
+								}
+								else
+									alert('Please select the rows before.');	
+							});
+    }
+    
+    function save()
+    {
+        var jsonData = "";
+        
+        for (var i = 0; i < store.getCount(); i++) 
+        {
+            record = store.getAt(i);
+            
+            if (record.data.insert || record.dirty) 
+                jsonData += Ext.util.JSON.encode(record.data) + ",";
+        }
+        
+        if (jsonData.length > 0) 
+        {
+            jsonData = "[" + jsonData.substring(0, jsonData.length - 1) + "]";
+            
+            gridForm.submit(
+            {
+                waitMsg: 'Submitting PO, please wait...',
+                url: "/admin/items/create_or_update",
+                params: 
+                {
+                    data: jsonData
+                },
+                success: function(form, action)
+                {
+                    loadDataSource();
+                },
+                failure: function(form, action)
+                {
+			var result = eval("json = " + action.response.responseText);//(action.response.responseText);
+
+			if(result.json.success == 1)
+				loadDataSource();		
+			else
+			alert('There were some errors.');
+                }
+            });
+        }
+        else 
+            alert('No changes to submit.');
+    }
+
+    function getSelectedRecord()
+    {
+		return grid.getSelectionModel().getSelected();
+    }
+    
+    function saveAndClose()
+    {
+		var record = getSelectedRecord();
+
+		if(adding == false)
+		{
+			if(record != null)
+			{
+				record.set('family', family.getValue());
+				record.set('code', code.getValue());
+				record.set('description', description.getValue());
+				record.set('options', options.getValue());
+				record.set('style', style.getValue());
+				record.set('sf', sf.getValue());
+				record.set('price', price.getValue());
+				record.set('weight', weight.getValue());			
+				record.set('units', units.getValue());			
+			}	
+    	}
+		else
+		{
+			store.add(new Ext.data.Record(
+	        {
+				insert:true,
+	            id: 0,
+				family: family.getValue(),
+	            code: code.getValue(),
+	            description: description.getValue(),
+	            options: options.getValue(),
+	            style: style.getValue(),
+		        sf: sf.getValue(),	            
+	            price: price.getValue(),
+	            weight: weight.getValue(),
+	            units: units.getValue()
+	        }));
+		}
+	
+		save();	
+
+		win.hide();
+    }
+    
+    function showWindow(record)
+    {
+        if(win == null)
+        {           
+	    	family = new Ext.form.TextField({
+	    		fieldLabel:'Family'
+	    	});
+	
+	    	code = new Ext.form.TextField({
+	    		fieldLabel:'Code'
+	    	});
+	
+	    	description = new Ext.form.TextField({
+	    		fieldLabel:'Description'
+	    	});
+	
+	    	options = new Ext.form.TextField({
+	    		fieldLabel:'Options'
+	    	});
+	
+	    	style = new Ext.form.TextField({
+	    		fieldLabel:'Style'
+	    	});
+	
+	    	sf = new Ext.form.TextField({
+	    		fieldLabel:'SF'
+	    	});
+	
+	    	price = new Ext.form.NumberField({
+	    		fieldLabel:'Price',
+			allowNegative:false
+	    	});	
+	
+	    	weight = new Ext.form.TextField({
+	    		fieldLabel:'Weight'
+	    	});
+	    	
+            units = new Ext.form.TextField({
+                fieldLabel:'Units'
+            });
+
+	    	form = new Ext.FormPanel({
+	    		layout:'form',
+	    		bodyStyle:'padding:5px 5px 0',
+	    		items:[family, code, description, options, style, sf, price, weight, units]
+	    	});
+
+	    	win = new Ext.Window({
+	    		title: 'Add/Edit',
+	    		layout:'fit',
+                width:570,
+                height:340,
+                closeAction:'hide',
+                plain: true,
+		    	items:form,
+		    	buttons: [
+		  	            {
+		  	                text: 'Save',
+		  	                handler: function()
+		  	                {
+		  	                	if(form.getForm().isValid())
+			  	                	saveAndClose();
+		  	                	else
+									alert('Some fields have invalid values.');
+		  	                }
+		  	            }, 
+		  	            {
+		  	                text: 'Close',
+		  	                handler: function()
+		  	                {
+		  						win.hide();
+		  		            }
+		  	            }]
+		   	});
+        }
+
+        if((adding = (record == null)))
+        {
+        	family.setValue(null);
+        	code.setValue(null);
+        	description.setValue(null);
+        	options.setValue(null);
+        	style.setValue(null);
+        	sf.setValue(null);
+        	price.setValue(null);
+        	weight.setValue(null);        	
+            units.setValue(null);
+        }
+        else
+        {
+        	family.setValue(record.data.family);
+        	code.setValue(record.data.code);
+        	description.setValue(record.data.description);
+        	options.setValue(record.data.options);
+        	style.setValue(record.data.style);
+        	sf.setValue(record.data.sf);
+        	price.setValue(record.data.price);
+        	weight.setValue(record.data.weight);
+            units.setValue(record.data.units);
+        }
+            	
+        win.show(document.body);
+    }
+});
+</script>
+
+<form id="general-form" method="post"></form>
+<div id="main-panel"></div>

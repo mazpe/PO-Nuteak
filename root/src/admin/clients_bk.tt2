@@ -1,0 +1,123 @@
+<link rel="stylesheet" href="[% c.uri_for('/static/css/flexigrid.css') %]" />
+<script type="text/javascript" src="[% c.uri_for('/', 'static', 'js', 'jquery-1.4.2.min.js' ) %]"></script>
+<script language="javascript" src="[% c.uri_for('/static/js/flexigrid.js') %]"></script>
+<script language="javascript" src="[% c.uri_for('/static/js/jquery.form.js') %]">
+</script>
+
+<div id="client_form" style="display:none"></div>
+
+<table id="clients_grid" style="display:none"></table>
+
+<style>
+.flexigrid div.fbutton .add
+{   
+background: url([% c.uri_for('/static/images/flexigrid/add.png') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .edit
+{   
+background: url([% c.uri_for('/static/images/pen-16.gif') %]) no-repeat center left;
+}
+.flexigrid div.fbutton .delete
+{   
+background: url([% c.uri_for('/static/images/flexigrid/close.png') %]) no-repeat center left;
+}
+</style>
+
+<script type="text/javascript">
+function add_client(button, grid) {
+    var form_div = $('#client_form');
+
+    form_div.load('/admin/clients/form_add', null, function() {
+        $('#client_form form').ajaxForm({
+            url: '/admin/clients/form_add',
+            success: function() {
+                form_div.hide();
+                $('#clients_grid').flexReload();
+            }
+        });
+        form_div.show();
+    });
+}
+
+function edit_client(button, grid) {
+    var id = $('.trSelected td:nth-child(1) div', grid).html();
+    var form_div = $('#client_form');
+    var url = '/admin/clients/form_edit/' + id;                                                                                
+    form_div.load(url, null, function() {
+        $('#client_form form').ajaxForm({
+            url: url,
+            success: function() {
+                form_div.hide();
+                $('#clients_grid').flexReload();
+            }
+        });
+        form_div.show();
+    });
+}
+
+function delete_client(button, grid) {
+    var total_count = $('.trSelected', grid).length;
+    var deleted     = 0;
+
+    $.each($('.trSelected', grid), function() {
+        var id = $('td:nth-child(1) div', this).html();
+        $.ajax({
+            url: '/api/client/' + id,
+            type: 'DELETE',
+            data: {},
+            dataType: 'json',
+            success: function() {
+                deleted++;
+                if (deleted == total_count) {
+                    $('#clients_grid').flexReload();
+                }
+            }
+        });
+    });
+}
+
+
+$("#clients_grid").flexigrid({
+    url: '/api/clients',
+    dataType: 'json',
+    colModel : [
+        {display: 'id', name : 'id', width : 0, sortable : false, hide: true},
+        {display: 'Company', name : 'company', width : 250, sortable : true, align: 'left'},
+        {display: 'Contact', name : 'contact', width : 150, sortable : true, align: 'left'},
+        {display: 'Telephone', name : 'telephone', width : 100, sortable : true, align: 'left'}
+    ],
+    searchitems : [
+        {display: 'Company', name: 'company', isdefault: true},
+        {display: 'Telephone', name: 'telephone' }
+    ],
+    buttons : [
+        {name: 'Add', bclass: 'add', onpress : add_client},
+        {name: 'Edit', bclass: 'edit', onpress : edit_client},
+        {name: 'Delete', bclass: 'delete', onpress : delete_client},
+        {separator: true}
+    ],
+    sortname: "company",
+    sortorder: "asc",
+    usepager: true,
+    title: 'Clients',
+    useRp: true,
+    rp: 10,
+    width: 550,
+    height: 245
+});
+
+  $('#clients_grid').dblclick( function (e) {
+      target = $(e.target);
+
+      while(target.get(0).tagName != "TR"){
+        target = target.parent();
+      }
+
+      var content_of_first_cell = {'inj_id': target.get(0).id.substr(3)}
+
+      alert(); 
+
+  }); 
+</script>
+
+

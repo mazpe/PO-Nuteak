@@ -1,0 +1,1 @@
+/script/nuteak_fastcgi.pl -l /tmp/nuteak.com.socket -n 5 -p /tmp/nuteak.com.pid -d
